@@ -8,6 +8,10 @@ from linebot import LineBotApi, WebhookHandler, WebhookParser
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from linebot.models import MessageEvent, TextSendMessage, TextMessage, ImageSendMessage
 import random
+import requests
+from bs4 import BeautifulSoup
+import numpy as np
+
 
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 parse = WebhookParser(settings.LINE_CHANNEL_SECRET)
@@ -36,7 +40,9 @@ def callback(request):
                     message, image_url = None, None
                     text = event.message.text
                     print(text)
-                    if '公車' in text:
+                    if '大樂透' == text:
+                        message = get_biglotto()
+                    elif '公車' in text:
                         message = 'https://pda.5284.gov.taipei/MQS/route.jsp?rid=16405'
                     elif '電影' in text:
                         message = 'https://movies.yahoo.com.tw/chart.html'
@@ -70,3 +76,19 @@ def lotto():
     n = random.randint(1, 50)
 
     return f'{result} 特別號:{n}'
+
+
+def get_biglotto():
+    url = 'https://www.taiwanlottery.com.tw/lotto/Lotto649/history.aspx'
+    resp = requests.get(url)
+    soup = BeautifulSoup(resp.text, 'lxml')
+    trs = soup.find('table', class_="table_org td_hm").find_all('tr')
+    numbers = [td.text.strip() for td in trs[4].find_all('td')[1:]]
+    numbers = ' '.join(numbers[:-1])+' 特別號:'+numbers[-1]
+    data1 = [td.text.strip() for td in trs[0].find_all('td')]
+    data2 = [td.text.strip() for td in trs[1].find_all('td')]
+    data = list(zip(data1, data2))
+    title = ':'.join(np.array(data).reshape(10))
+    result = f'{title}\n{numbers}'
+
+    return result
