@@ -33,33 +33,32 @@ def callback(request):
         for event in events:
             if isinstance(event, MessageEvent):
                 if isinstance(event.message, TextMessage):
+                    message, image_url = None, None
                     text = event.message.text
                     print(text)
-                    if '電影' in text:
+                    if '公車' in text:
+                        message = 'https://pda.5284.gov.taipei/MQS/route.jsp?rid=16405'
+                    elif '電影' in text:
                         message = 'https://movies.yahoo.com.tw/chart.html'
                     elif '台北捷運' in text:
                         message = 'https://kuopoting.github.io/k1/'
                     elif '台中捷運' in text:
                         image_url = 'https://assets.piliapp.com/s3pxy/mrt_taiwan/taichung/20201112_zh.png'
-                        line_bot_api.reply_message(event.reply_token,
-                                                   ImageSendMessage(original_content_url=image_url,
-                                                                    preview_image_url=image_url))
                     elif '樂透' in text:
                         message = lotto()
                     elif '早安' in text:
                         message = '早安你好!'
                     else:
                         message = random.choice(words)
-
-                    line_bot_api.reply_message(
-                        event.reply_token,
-                        TextSendMessage(text=message)
-                    )
                 else:
-                    line_bot_api.reply_message(
-                        event.reply_token,
-                        TextSendMessage(text='無法解析')
-                    )
+                    message = '無法解析'
+
+                messageObject = TextSendMessage(text=message) if message is not None else \
+                    ImageSendMessage(
+                        original_content_url=image_url, preview_image_url=image_url)
+
+                line_bot_api.reply_message(event.reply_token, messageObject)
+
         return HttpResponse()
     else:
         return HttpResponseBadRequest()
