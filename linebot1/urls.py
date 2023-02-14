@@ -19,6 +19,7 @@ from django.urls import re_path as url
 from bot import views
 
 urlpatterns = [
+    path('', views.index),
     url('^callback', views.callback),
     path("admin/", admin.site.urls),
 ]
